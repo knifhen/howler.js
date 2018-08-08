@@ -23,12 +23,17 @@
     this.init();
   };
   HowlerGlobal.prototype = {
+    debug: function(msg) {
+        // console.warn("howler.js HowlerGlobal " + Date() + " " + msg);
+    },
+
     /**
      * Initialize the global Howler object.
      * @return {Howler}
      */
     init: function() {
       var self = this || Howler;
+      self.debug('init()');
 
       // Create a global ID counter.
       self._counter = 1000;
@@ -54,6 +59,7 @@
       // Setup the various state values for global tracking.
       self._setup();
 
+      self.debug('init() - done');
       return self;
     },
 
@@ -64,10 +70,11 @@
      */
     volume: function(vol) {
       var self = this || Howler;
+      self.debug("volume");
       vol = parseFloat(vol);
 
       // If we don't have an AudioContext created yet, run the setup.
-      if (!self.ctx) {
+      if (!self.ctx && Howler.usingWebAudio) {
         setupAudioContext();
       }
 
@@ -113,9 +120,10 @@
      */
     mute: function(muted) {
       var self = this || Howler;
+      self.debug("mute");
 
       // If we don't have an AudioContext created yet, run the setup.
-      if (!self.ctx) {
+      if (!self.ctx && Howler.usingWebAudio) {
         setupAudioContext();
       }
 
@@ -152,6 +160,7 @@
      */
     unload: function() {
       var self = this || Howler;
+      self.debug("unload");
 
       for (var i=self._howls.length-1; i>=0; i--) {
         self._howls[i].unload();
@@ -182,6 +191,7 @@
      */
     _setup: function() {
       var self = this || Howler;
+      self.debug('_setup()');
 
       // Keeps track of the suspend/resume state of the AudioContext.
       self.state = self.ctx ? self.ctx.state || 'running' : 'running';
@@ -221,6 +231,8 @@
         self._setupCodecs();
       }
 
+        self.debug('_setup() - done');
+
       return self;
     },
 
@@ -230,6 +242,11 @@
      */
     _setupCodecs: function() {
       var self = this || Howler;
+      self.debug('_setupCodecs()');
+
+      if(self._codecs) {
+        return self
+      }
       var audioTest = null;
 
       // Must wrap in a try/catch because IE11 in server mode throws an error.
@@ -265,7 +282,7 @@
         dolby: !!audioTest.canPlayType('audio/mp4; codecs="ec-3"').replace(/^no$/, ''),
         flac: !!(audioTest.canPlayType('audio/x-flac;') || audioTest.canPlayType('audio/flac;')).replace(/^no$/, '')
       };
-
+        self.debug('_setupCodecs() - done');
       return self;
     },
 
@@ -458,6 +475,10 @@
     self.init(o);
   };
   Howl.prototype = {
+      debug: function(msg) {
+          // console.warn("howler.js Howl " + Date() + " " + msg);
+      },
+
     /**
      * Initialize a new Howl group object.
      * @param  {Object} o Passed in properties for this group.
@@ -465,7 +486,7 @@
      */
     init: function(o) {
       var self = this;
-
+      self.debug("init");
       // If we don't have an AudioContext created yet, run the setup.
       if (!Howler.ctx) {
         setupAudioContext();
@@ -2279,6 +2300,7 @@
    * Setup the audio context when available, or switch to HTML5 Audio mode.
    */
   var setupAudioContext = function() {
+    Howler.debug("setupAudioContext");
     // Check if we are using Web Audio and setup the AudioContext if we are.
     try {
       if (typeof AudioContext !== 'undefined') {
