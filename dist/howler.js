@@ -488,7 +488,7 @@
       var self = this;
       self.debug("init");
       // If we don't have an AudioContext created yet, run the setup.
-      if (!Howler.ctx) {
+      if (!Howler.ctx && Howler.usingWebAudio) {
         setupAudioContext();
       }
 
